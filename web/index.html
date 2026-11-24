@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jarvis Wall Display</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: calm, glanceable household companion, readable from across a room
+   IDEA: a kitchen wall clock that listens; the orb is its face
+   PICTURE: a large glowing orb that breathes, listens, thinks and speaks
+   COLOUR and TYPE: deep teal-graphite, aqua orb, coral for delays; Outfit numerals + Manrope
+   LAYOUT: 1080p landscape, one screen, no scrolling, no touch; orb left, cards right */
+:root{color-scheme:dark;--bg:#0a1114;--panel:#111b1f;--line:#1e2c31;--ink:#e7f1f1;--mute:#8ba2a6;
+--aqua:#5fd6c9;--aqua2:#1d6f68;--coral:#ff8d63;--ok:#6fd194;--sunc:#f6b73c;--rainc:#4aa3df}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Manrope,system-ui,sans-serif;overflow-x:clip;cursor:none}
+h2,h3{margin:0;font-weight:600}
+.num{font-family:Outfit,Manrope,sans-serif;font-variant-numeric:tabular-nums}
+.screen{height:100vh;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:clamp(12px,2vh,24px);padding:clamp(16px,3vh,40px) clamp(16px,3vw,56px)}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.clock{font-size:clamp(56px,10vh,120px);line-height:1;font-weight:300;letter-spacing:-.02em}
+.greet{font-size:clamp(18px,2.4vh,26px);color:var(--mute)}.greet b{color:var(--ink);font-weight:600}
+.now{display:flex;align-items:center;gap:16px;text-align:right}
+.now .t{font-size:clamp(44px,7vh,80px);line-height:1;font-weight:300}
+.now small{display:block;color:var(--mute);font-size:clamp(15px,2vh,20px)}
+.now svg{width:clamp(48px,8vh,84px);height:auto}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(14px,2vw,28px);min-height:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:clamp(14px,2.2vh,28px)}
+.card h2{font-size:clamp(14px,1.8vh,18px);color:var(--mute);margin-bottom:clamp(8px,1.2vh,14px)}
+.jarvis{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,2vh,22px);min-height:0}
+.orb{width:min(100%,46vh);aspect-ratio:1}
+.orb svg{width:100%;height:100%;display:block;overflow:visible}
+.state{font-size:clamp(20px,2.8vh,30px);font-weight:600;text-align:center}
+.state small{display:block;font-size:clamp(14px,1.9vh,19px);color:var(--mute);font-weight:500}
+.convo{width:100%;max-width:640px;display:grid;gap:10px}
+.you,.ai{padding:10px 16px;border-radius:18px;max-width:94%;font-size:clamp(16px,2.2vh,22px);line-height:1.4}
+.you{justify-self:end;background:var(--line)}
+.ai{justify-self:start;background:color-mix(in srgb,var(--aqua) 14%,transparent);border:1px solid color-mix(in srgb,var(--aqua) 35%,transparent)}
+.right{display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:clamp(12px,2vh,22px);min-height:0}
+.wx{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.wx .big{font-size:clamp(44px,6.5vh,72px);line-height:1;font-weight:300}
+.wx p{margin:4px 0 0;color:var(--mute);font-size:clamp(15px,1.9vh,19px)}
+.hours{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:clamp(8px,1.4vh,16px);text-align:center}
+.hours div{padding:8px 2px;border-radius:14px;background:var(--bg);font-size:clamp(13px,1.6vh,16px);color:var(--mute)}
+.hours b{display:block;font-size:clamp(16px,2.1vh,22px);font-family:Outfit,sans-serif;font-weight:600;color:var(--ink)}
+.hours svg{width:26px;height:26px;display:block;margin:4px auto}
+.route{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;padding:clamp(8px,1.3vh,14px) 0;border-top:1px solid var(--line)}
+.route:first-child{border-top:0;padding-top:0}
+.route h3{font-size:clamp(17px,2.2vh,22px)}
+.route .mins{font-size:clamp(30px,4.4vh,46px);line-height:1;font-weight:600;text-align:right;white-space:nowrap}
+.route .mins span{font-size:clamp(14px,1.8vh,18px);color:var(--mute);font-weight:500}
+.route p{margin:0;color:var(--mute);font-size:clamp(14px,1.8vh,18px)}
+.route p b{color:var(--ink)}
+.delay{color:var(--coral);font-weight:600}.clear{color:var(--ok);font-weight:600}
+.bar{grid-column:1/-1;height:8px;border-radius:9px;background:var(--bg);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.news{overflow:hidden}
+.news ol{margin:0;padding:0;list-style:none;display:grid;gap:clamp(6px,1.2vh,12px)}
+.news li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:baseline;font-size:clamp(15px,2vh,20px)}
+.news li span{font-size:clamp(12px,1.5vh,15px);color:var(--mute);white-space:nowrap;min-width:52px}
+.news li div{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--mute)}
+/* night mode: dim clock only */
+.night{position:fixed;inset:0;background:#000;display:none;place-items:center;text-align:center;color:#5d6b6e}
+.night .clock{font-size:clamp(80px,22vh,260px)}
+body.is-night .night{display:grid}body.is-night .screen{display:none}
+/* small screens (phone/laptop preview) scroll instead of fitting one screen */
+@media(max-width:900px),(max-height:620px){body{cursor:auto}.screen{height:auto;min-height:100vh}.grid{grid-template-columns:minmax(0,1fr)}.right{grid-template-rows:none}.orb{width:min(100%,340px)}}
+@media(max-width:600px){.now{text-align:left}.hours{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="screen">
+  <header class="top">
+    <div>
+      <div class="clock num" id="clock">7:12</div>
+      <div class="greet" id="greet">Good morning</div>
+    </div>
+    <div class="now">
+      <span id="nowIcon"></span>
+      <div><div class="t num" id="nowT">--°</div><small id="nowS">Loading weather…</small></div>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="card jarvis" aria-label="Jarvis voice assistant">
+      <div class="orb" aria-hidden="true">
+        <svg viewBox="-200 -200 400 400">
+          <defs>
+            <radialGradient id="core" cx="40%" cy="35%" r="70%">
+              <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/>
+              <stop offset=".35" stop-color="#5fd6c9"/>
+              <stop offset="1" stop-color="#1d6f68"/>
+            </radialGradient>
+            <radialGradient id="halo"><stop offset=".55" stop-color="#5fd6c9" stop-opacity=".35"/><stop offset="1" stop-color="#5fd6c9" stop-opacity="0"/></radialGradient>
+          </defs>
+          <circle id="haloC" r="190" fill="url(#halo)"/>
+          <g id="rings" fill="none" stroke="#5fd6c9"></g>
+          <circle id="coreC" r="96" fill="url(#core)"/>
+          <ellipse cx="-30" cy="-42" rx="34" ry="18" fill="#fff" opacity=".35"/>
+        </svg>
+      </div>
+      <div class="state" id="state">Say "Hey Jarvis"<small>I'm listening for you</small></div>
+      <div class="convo" id="convo" aria-live="polite"></div>
+    </section>
+
+    <div class="right">
+      <section class="card" aria-label="Weather">
+        <h2>Weather</h2>
+        <div class="wx">
+          <div><div class="big num" id="wxT">--°F</div><p id="wxF"></p></div>
+          <p id="wxR"></p>
+        </div>
+        <div class="hours" id="hours"></div>
+      </section>
+      <section class="card" aria-label="Commute">
+        <h2>Commute · live traffic</h2>
+        <div id="routes"></div>
+      </section>
+      <section class="card news" aria-label="Headlines">
+        <h2>Headlines</h2>
+        <ol id="news"></ol>
+      </section>
+    </div>
+  </main>
+
+  <footer class="foot"><span id="status">Connecting…</span><span id="updated"></span></footer>
+</div>
+<div class="night"><div><div class="clock num" id="nclock">11:00</div><div id="ndate"></div></div></div>
+
+<script>
+{
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ICONS={
+ sun:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5.5" fill="#f6b73c"/></svg>',
+ cloud:'<svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="4" fill="#f6b73c"/><path d="M7 19h11a4 4 0 0 0 0-8 5 5 0 0 0-9.6 1.5A3.5 3.5 0 0 0 7 19z" fill="#8ba2a6"/></svg>',
+ rain:'<svg viewBox="0 0 24 24"><path d="M6 15h12a4 4 0 0 0 0-8 5 5 0 0 0-9.6 1.5A3.5 3.5 0 0 0 6 15z" fill="#8ba2a6"/><path d="M9 18l-1 3M13 18l-1 3M17 18l-1 3" stroke="#4aa3df" stroke-width="2" stroke-linecap="round"/></svg>',
+ snow:'<svg viewBox="0 0 24 24"><path d="M6 14h12a4 4 0 0 0 0-8 5 5 0 0 0-9.6 1.5A3.5 3.5 0 0 0 6 14z" fill="#8ba2a6"/><g fill="#e7f1f1"><circle cx="9" cy="19" r="1.3"/><circle cx="13" cy="20" r="1.3"/><circle cx="17" cy="19" r="1.3"/></g></svg>',
+ storm:'<svg viewBox="0 0 24 24"><path d="M6 14h12a4 4 0 0 0 0-8 5 5 0 0 0-9.6 1.5A3.5 3.5 0 0 0 6 14z" fill="#8ba2a6"/><path d="M13 14l-3 5h3l-2 4" stroke="#f6b73c" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>'};
+
+/* Sample data, used only when the Jarvis server isn't reachable (preview mode). */
+const SAMPLE={name:"Rainer",provider:"gemini",updated:"",night_start:"22:00",night_end:"05:30",
+ weather:{temp:41,feels_like:36,condition:"partly cloudy",icon:"cloud",wind_mph:12,high:54,low:33,rain_chance_today:40,
+  hourly:[["8 am",42,"cloud"],["10 am",47,"sun"],["12 pm",51,"sun"],["2 pm",54,"cloud"],["4 pm",52,"cloud"],["6 pm",46,"rain"]].map(([time,temp,icon])=>({time,temp,icon}))},
+ commutes:[{label:"Kids' school drop-off",minutes:18,usual_minutes:14,delay_minutes:4,via:"I-435 N",leave_by:"7:32 AM"},
+  {label:"Gym",minutes:11,usual_minutes:12,delay_minutes:0,via:"Metcalf Ave"}],
+ news:[{source:"Local",title:"City council approves new bike lanes along the Main Street corridor"},
+  {source:"Weather",title:"Cold front brings the first hard freeze of the season this weekend"},
+  {source:"Tech",title:"Phone makers roll out winter software updates"},
+  {source:"Business",title:"Carriers announce holiday shipping deadlines"},
+  {source:"Sports",title:"Hometown team prepares for Sunday's division matchup"}]};
+
+let data=SAMPLE,live=false;
+
+function render(d){
+ const w=d.weather||{};
+ if(w.error){$('wxT').textContent='--';$('wxF').textContent=w.error}
+ else{
+  $('nowT').textContent=`${w.temp}°`;
+  $('nowS').textContent=`${cap(w.condition)} · High ${w.high}°`;
+  $('nowIcon').innerHTML=ICONS[w.icon]||ICONS.cloud;
+  $('wxT').textContent=`${w.temp}°F`;
+  $('wxF').textContent=`Feels like ${w.feels_like}° · Wind ${w.wind_mph} mph · Low ${w.low}°`;
+  $('wxR').textContent=w.rain_chance_today>=30?`${w.rain_chance_today}% chance of rain today`:'Dry today';
+  $('hours').innerHTML=(w.hourly||[]).map(h=>`<div>${esc(h.time)}${ICONS[h.icon]||''}<b>${h.temp}°</b></div>`).join('');
+ }
+ $('routes').innerHTML=(d.commutes||[]).map(r=>{
+  if(r.error)return `<div class="route"><div><h3>${esc(r.label)}</h3><p>${esc(r.error)}</p></div><div class="mins num">--</div></div>`;
+  const slow=r.delay_minutes>0,g=Math.round(100*r.usual_minutes/Math.max(r.minutes,r.usual_minutes));
+  return `<div class="route"><div><h3>${esc(r.label)}</h3><p>${r.via?'via '+esc(r.via)+' · ':''}<span class="${slow?'delay':'clear'}">${slow?`+${r.delay_minutes} min traffic`:'clear roads'}</span></p></div>
+  <div class="mins num">${r.minutes}<span> min</span></div>
+  <div class="bar" aria-hidden="true"><i style="width:${g}%;background:var(--ok)"></i><i style="width:${100-g}%;background:var(--coral)"></i></div>
+  ${r.leave_by?`<p style="grid-column:1/-1">Leave by <b class="num">${esc(r.leave_by)}</b></p>`:''}</div>`}).join('');
+ const news=Array.isArray(d.news)?d.news:[];
+ $('news').innerHTML=news.map(n=>`<li><span>${esc(n.source)}</span><div>${esc(n.title)}</div></li>`).join('')||'<li><span></span><div>News unavailable right now</div></li>';
+ $('status').textContent=live?`Connected · brain: ${d.provider}`:'Preview with sample data · the Jarvis server is not connected';
+ $('updated').textContent=d.updated?`Updated ${d.updated}`:'';
+}
+const cap=s=>s?s[0].toUpperCase()+s.slice(1):'';
+
+async function load(){
+ try{const r=await fetch('api/dashboard',{cache:'no-store'});if(!r.ok)throw 0;data=await r.json();live=true}
+ catch(e){live=false;data=SAMPLE}
+ render(data);
+}
+
+/* ---------- orb ---------- */
+const rings=$('rings');rings.innerHTML=[0,1,2].map(i=>`<circle r="110" stroke-width="2" opacity="0" id="r${i}"/>`).join('');
+let mode='idle',level=0;const t0=performance.now();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const core=$('coreC'),halo=$('haloC');
+function frame(now){
+ const t=(now-t0)/1000;let r=96,h=1;
+ if(mode==='idle'){r=96+4*Math.sin(t*1.2);h=.9+.08*Math.sin(t*1.2)}
+ else if(mode==='listening'){r=104+6*Math.sin(t*6);h=1.05}
+ else if(mode==='thinking'){r=92+3*Math.sin(t*9)}
+ else if(mode==='speaking'){level+=(Math.random()-.5)*.6;level=Math.max(0,Math.min(1,level*.9+.08));r=98+22*level;h=1+.15*level}
+ core.setAttribute('r',r.toFixed(1));halo.setAttribute('r',(190*h).toFixed(1));
+ for(let i=0;i<3;i++){const c=$('r'+i);
+  if(mode==='idle'){c.setAttribute('opacity',0);continue}
+  const sp=mode==='thinking'?.9:mode==='listening'?.6:.45,p=((t*sp)+i/3)%1;
+  c.setAttribute('r',(r+10+p*80).toFixed(1));c.setAttribute('opacity',((1-p)*.6).toFixed(2));
+  if(mode==='thinking'){c.setAttribute('stroke-dasharray','14 10');c.setAttribute('transform',`rotate(${(t*80*(i%2?1:-1))%360})`)}
+  else{c.removeAttribute('stroke-dasharray');c.removeAttribute('transform')}}
+ if(!reduce)requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+const LABELS={idle:['Say "Hey Jarvis"',"I'm listening for you"],listening:['Listening…','Go ahead'],thinking:['Thinking…','Checking live data'],speaking:['Speaking','']};
+let clearTimer;
+function setMode(m,sub){mode=LABELS[m]?m:'idle';const[a,b]=LABELS[mode];$('state').innerHTML=`${a}<small>${esc(sub||b)}</small>`;if(reduce)frame(performance.now());
+ if(mode==='idle'){clearTimeout(clearTimer);clearTimer=setTimeout(()=>{$('convo').innerHTML=''},45000)}}
+function heard(t){clearTimeout(clearTimer);$('convo').innerHTML=`<div class="you">${esc(t)}</div>`}
+function answer(t){const c=$('convo');let el=c.querySelector('.ai');if(!el){el=document.createElement('div');el.className='ai';c.appendChild(el)}el.textContent=t}
+
+/* ---------- live connection to the Jarvis server ---------- */
+function connect(){
+ let ws;try{ws=new WebSocket(location.href.replace(/^http/,'ws').replace(/[#?].*$/,'').replace(/\/?$/,'/ws'))}catch(e){return}
+ ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(_){return}
+  if(m.type==='state'){setMode(m.state,m.state==='thinking'?m.text:'');if(m.state==='speaking'&&m.text)answer(m.text)}
+  else if(m.type==='heard')heard(m.text);
+  else if(m.type==='answer')answer(m.text)};
+ ws.onopen=()=>{ping=setInterval(()=>{try{ws.send('ping')}catch(_){}},25000)};
+ ws.onclose=()=>{clearInterval(ping);if(live)setTimeout(connect,3000)};
+}
+let ping;
+
+/* ---------- preview demo: plays a sample exchange when no server ---------- */
+const DEMO=[["How's the commute to school?","Drop-off is 18 minutes right now, about 4 minutes slower than usual on I-435. Leave by 7:32 to be on time."],
+ ["What's the weather like today?","It's 41 degrees and partly cloudy, heading to a high of 54. Rain is possible this evening, so grab a jacket."],
+ ["Any news this morning?","The city council approved new bike lanes on Main Street, and a cold front brings the first hard freeze this weekend."]];
+let di=0;const wait=ms=>new Promise(r=>setTimeout(r,ms));
+async function demo(){if(live)return;const[q,a]=DEMO[di++%DEMO.length];
+ setMode('listening');await wait(1500);heard(q);setMode('thinking');await wait(1400);setMode('speaking');
+ const words=a.split(' ');for(let i=1;i<=words.length;i++){answer(words.slice(0,i).join(' '));await wait(reduce?0:110)}
+ await wait(1200);setMode('idle')}
+
+/* ---------- clock + night mode ---------- */
+const mins=s=>{const[h,m]=String(s).split(':').map(Number);return h*60+m};
+function tick(){const d=new Date(),h=d.getHours(),m=String(d.getMinutes()).padStart(2,'0');
+ const clock=`${h%12||12}:${m}`,date=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+ const part=h<12?'morning':h<17?'afternoon':'evening';
+ $('clock').textContent=clock;$('nclock').textContent=clock;$('ndate').textContent=date;
+ $('greet').innerHTML=`Good ${part}${data.name?`, <b>${esc(data.name)}</b>`:''} · ${date}`;
+ const now=h*60+d.getMinutes(),a=mins(data.night_start||'22:00'),b=mins(data.night_end||'05:30');
+ const night=a>b?(now>=a||now<b):(now>=a&&now<b);
+ document.body.classList.toggle('is-night',night&&mode==='idle'&&live);}
+
+load().then(()=>{connect();tick();if(!live)setTimeout(demo,2500)});
+setInterval(load,5*60*1000);setInterval(tick,10000);
+setInterval(()=>{if(!live&&mode==='idle')demo()},20000);
+document.addEventListener('keydown',e=>{if(e.code==='Space')demo()});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# secrets and personal settings — never commit
+.env
+config.yaml
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# models / caches
+models/
+*.onnx
+.cache/
+
+# OS
+.DS_Store

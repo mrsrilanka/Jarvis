@@ -1,0 +1,40 @@
+# Run with:  podman compose up -d --build            (server only — Mac or Linux)
+#            podman compose --profile voice up -d --build   (server + voice — Linux mini PC)
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server/Containerfile
+    image: localhost/jarvis-server:latest
+    container_name: jarvis-server
+    ports:
+      - "8080:8080"
+    env_file: .env
+    environment:
+      JARVIS_CONFIG: /app/config.yaml
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro,Z
+    restart: unless-stopped
+
+  voice:
+    profiles: ["voice"]
+    build:
+      context: .
+      dockerfile: voice/Containerfile
+    image: localhost/jarvis-voice:latest
+    container_name: jarvis-voice
+    depends_on: [server]
+    environment:
+      JARVIS_CONFIG: /app/config.yaml
+      JARVIS_SERVER: http://server:8080
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro,Z
+      - jarvis-cache:/cache
+    devices:
+      - /dev/snd:/dev/snd
+    group_add:
+      - keep-groups
+    restart: unless-stopped
+
+volumes:
+  jarvis-cache:

@@ -1,0 +1,22 @@
+# Full-screen dashboard on the mini PC's monitor, no desktop needed.
+# Install: see README "Mini PC" section. Runs as the user named below.
+[Unit]
+Description=Jarvis wall display (kiosk)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=jarvis
+PAMName=login
+TTYPath=/dev/tty1
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+# Wait for the server container, then open the dashboard full-screen.
+ExecStartPre=/bin/sh -c 'until curl -sf http://localhost:8080/healthz; do sleep 2; done'
+ExecStart=/usr/bin/cage -d -- chromium --kiosk --noerrdialogs --disable-infobars \
+  --no-first-run --disable-session-crashed-bubble --check-for-update-interval=31536000 \
+  --ozone-platform=wayland http://localhost:8080/
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=graphical.target

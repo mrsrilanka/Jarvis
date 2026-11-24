@@ -1,0 +1,58 @@
+# Jarvis configuration. Copy to config.yaml and fill in your details.
+# config.yaml stays on your machine. Do not commit it anywhere public.
+# API keys go in the .env file, not here.
+
+home:
+  name: Rainer                 # used in the on-screen greeting
+  address: "123 Example St, Overland Park, KS"   # REPLACE: starting point for commute times
+  latitude: 39.0997            # REPLACE with your home coordinates (for weather)
+  longitude: -94.5786
+  timezone: America/Chicago
+
+# Places Jarvis can give commute times to. "id" is what the AI uses internally.
+# arrive_by is optional (24h HH:MM); when set, Jarvis tells you when to leave.
+places:
+  - id: school
+    label: "Kids' school drop-off"
+    address: "REPLACE with the school address"
+    arrive_by: "07:50"
+    weekdays_only: true
+  - id: gym
+    label: "Gym"
+    address: "REPLACE with the gym address"
+
+llm:
+  provider: gemini             # gemini or claude — switch any time and restart
+  gemini:
+    # Check Google AI Studio for current model names; Flash models are fast and cheap.
+    model: gemini-flash-latest
+    # false = use GEMINI_API_KEY. true = use Vertex AI in your Google Cloud project
+    # (bills against the $10/month Google AI Pro Cloud credit).
+    use_vertex: false
+    project: ""                # your GCP project id when use_vertex is true
+    location: us-central1
+  claude:
+    model: claude-haiku-5-5    # check Anthropic docs for current model names
+
+news:
+  max_items: 6
+  feeds:                       # any RSS feeds you like
+    - name: World
+      url: https://feeds.bbci.co.uk/news/world/rss.xml
+    - name: US
+      url: https://feeds.npr.org/1001/rss.xml
+
+display:
+  refresh_minutes: 10          # how often weather, traffic and news refresh
+  night_start: "22:00"         # dashboard switches to a dim clock-only mode
+  night_end: "05:30"
+
+voice:
+  wake_word: hey_jarvis        # built-in openWakeWord model
+  wake_threshold: 0.5          # raise if it triggers by accident, lower if it misses you
+  whisper_model: base.en       # tiny.en is faster, small.en is more accurate
+  max_listen_seconds: 10
+  silence_seconds: 1.2         # stop listening after this much quiet
+  tts: auto                    # auto, say (macOS), piper (Linux), espeak
+  piper_voice: /models/piper/en_US-lessac-medium.onnx
+  server_url: http://localhost:8080
