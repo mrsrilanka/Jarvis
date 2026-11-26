@@ -54,18 +54,42 @@ alongside always-on cards for weather, commute times and news.
 
 ### How it works
 
-```
- "Hey Jarvis"            ┌──────────────── jarvis-server (Podman) ────────────────┐
-   │                     │  FastAPI                                                │
-   ▼                     │   ├─ /api/ask ──► Brain (Gemini or Claude + tools)      │
- voice loop ── text ───► │   │                 ├─ get_weather  → Open-Meteo        │
- (wake word, Whisper,    │   │                 ├─ get_commute  → Google Routes API │
-  text-to-speech)        │   │                 └─ get_news     → RSS feeds         │
-   ▲      │              │   ├─ /api/dashboard ─► cached weather, commute, news    │
-   │      └─ state ────► │   └─ /ws ──► pushes orb state + answers live            │
- speaker                 └─────────────────────────────┬───────────────────────────┘
-                                                       ▼
-                                   Dashboard (Chromium kiosk on the wall monitor)
+```mermaid
+flowchart TD
+    you(["🗣️ You: 'Hey Jarvis…'"])
+
+    subgraph wall["At the wall"]
+        mic["🎙️ USB speakerphone<br/>mic + speaker"]
+        screen["🖥️ Wall dashboard<br/>Chromium kiosk"]
+    end
+
+    subgraph host["Host computer · Podman"]
+        voice["👂 Voice loop<br/>wake word · Whisper · Piper"]
+        server["🧠 Server container<br/>FastAPI · tools · cache"]
+    end
+
+    subgraph cloud["Internet"]
+        llm["✨ Gemini or Claude"]
+        data["🌦️ Weather · 🚗 Traffic · 📰 News"]
+    end
+
+    you -->|speaks| mic
+    mic -->|audio| voice
+    voice -->|question text| server
+    server <-->|question + tools| llm
+    server <-->|live data| data
+    server -->|answer text| voice
+    voice -->|spoken answer| mic
+    server -->|live updates| screen
+
+    classDef person fill:#fde68a,stroke:#b45309,color:#1f2937
+    classDef device fill:#dbeafe,stroke:#1d4ed8,color:#1f2937
+    classDef container fill:#dcfce7,stroke:#15803d,color:#1f2937
+    classDef external fill:#f3e8ff,stroke:#7e22ce,color:#1f2937
+    class you person
+    class mic,screen device
+    class voice,server container
+    class llm,data external
 ```
 
 1. **Wake word.** openWakeWord listens locally for "Hey Jarvis". Nothing leaves the house until then.
