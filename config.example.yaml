@@ -3,10 +3,10 @@
 # API keys go in the .env file, not here.
 
 home:
-  name: Rainer                 # used in the on-screen greeting
-  address: "123 Example St, Overland Park, KS"   # REPLACE: starting point for commute times
-  latitude: 39.0997            # REPLACE with your home coordinates (for weather)
-  longitude: -94.5786
+  name: Family                 # REPLACE: used in the on-screen greeting
+  address: "123 Example St, Anytown, USA"   # REPLACE: starting point for commute times
+  latitude: 0.0                # REPLACE with your home coordinates (for weather)
+  longitude: 0.0
   timezone: America/Chicago
 
 # Places Jarvis can give commute times to. "id" is what the AI uses internally.
